@@ -1,9 +1,10 @@
-"""
-Parsers for genre browse pages.
-"""
+from typing import Optional, List, Dict, Any
+from ytmusicapi.navigation import nav
 
-from ._utils import *
-from ..navigation import nav, TITLE_TEXT, THUMBNAIL_RENDERER, THUMBNAILS
+
+TITLE_TEXT = ["title", "runs", 0, "text"]
+THUMBNAIL_RENDERER = ["musicThumbnailRenderer"]
+THUMBNAILS = ["thumbnail", "thumbnails"]
 
 
 def parse_genre_contents(response: dict) -> dict:
@@ -37,26 +38,26 @@ def parse_genre_contents(response: dict) -> dict:
     return results
 
 
-def parse_genre_header(response: dict) -> dict | None:
+def parse_genre_header(response: dict) -> Optional[dict]:
     """Parse genre page header."""
     header = response.get("header", {})
 
     if "musicHeaderRenderer" in header:
         return {
-            "title": nav(header, ["musicHeaderRenderer", *TITLE_TEXT], True)
+            "title": nav(header, ["musicHeaderRenderer"] + TITLE_TEXT, True)
         }
 
     if "musicImmersiveHeaderRenderer" in header:
         ihr = header["musicImmersiveHeaderRenderer"]
         return {
             "title": nav(ihr, TITLE_TEXT, True),
-            "thumbnail": nav(ihr, ["thumbnail", *THUMBNAIL_RENDERER, *THUMBNAILS], True)
+            "thumbnail": nav(ihr, ["thumbnail"] + THUMBNAIL_RENDERER + THUMBNAILS, True)
         }
 
     return None
 
 
-def parse_genre_section(section: dict) -> dict | None:
+def parse_genre_section(section: dict) -> Optional[dict]:
     """Route section to appropriate parser."""
     if "musicCarouselShelfRenderer" in section:
         return parse_carousel_shelf(section["musicCarouselShelfRenderer"])
@@ -74,8 +75,8 @@ def parse_carousel_shelf(shelf: dict) -> dict:
     """Parse horizontal carousel (playlists, albums, artists)."""
     result = {
         "title": nav(shelf, [
-            "header", "musicCarouselShelfBasicHeaderRenderer", *TITLE_TEXT
-        ], True),
+            "header", "musicCarouselShelfBasicHeaderRenderer"
+        ] + TITLE_TEXT, True),
         "type": "unknown",
         "items": []
     }
@@ -90,7 +91,7 @@ def parse_carousel_shelf(shelf: dict) -> dict:
     return result
 
 
-def parse_two_row_item(item: dict) -> dict | None:
+def parse_two_row_item(item: dict) -> Optional[dict]:
     """Parse musicTwoRowItemRenderer (playlist/album/artist cards)."""
     if "musicTwoRowItemRenderer" not in item:
         return None
@@ -107,8 +108,8 @@ def parse_two_row_item(item: dict) -> dict | None:
     ], True)
 
     thumbnails = nav(renderer, [
-        "thumbnailRenderer", *THUMBNAIL_RENDERER, *THUMBNAILS
-    ], True)
+        "thumbnailRenderer"
+    ] + THUMBNAIL_RENDERER + THUMBNAILS, True)
 
     result_type = _get_type_from_browse_id(browse_id)
 
@@ -137,7 +138,7 @@ def parse_music_shelf(shelf: dict) -> dict:
     return result
 
 
-def parse_genre_song(item: dict) -> dict | None:
+def parse_genre_song(item: dict) -> Optional[dict]:
     """Parse song from musicResponsiveListItemRenderer."""
     if "musicResponsiveListItemRenderer" not in item:
         return None
@@ -183,8 +184,8 @@ def parse_genre_song(item: dict) -> dict | None:
                 song["views"] = text
 
     song["thumbnails"] = nav(renderer, [
-        "thumbnail", *THUMBNAIL_RENDERER, *THUMBNAILS
-    ], True)
+        "thumbnail"
+    ] + THUMBNAIL_RENDERER + THUMBNAILS, True)
 
     return song
 
@@ -192,7 +193,7 @@ def parse_genre_song(item: dict) -> dict | None:
 def parse_grid_renderer(grid: dict) -> dict:
     """Parse grid layout."""
     result = {
-        "title": nav(grid, ["header", "gridHeaderRenderer", *TITLE_TEXT], True),
+        "title": nav(grid, ["header", "gridHeaderRenderer"] + TITLE_TEXT, True),
         "type": "playlists",
         "items": []
     }
@@ -205,7 +206,7 @@ def parse_grid_renderer(grid: dict) -> dict:
     return result
 
 
-def _get_type_from_browse_id(browse_id: str | None) -> str:
+def _get_type_from_browse_id(browse_id: Optional[str]) -> str:
     """Determine content type from browse ID prefix."""
     if not browse_id:
         return "playlist"

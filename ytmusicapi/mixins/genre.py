@@ -1,12 +1,10 @@
-"""
-Genre browsing mixin for YTMusic.
-"""
+from typing import Optional, List, Dict, Any
 
-from typing import Optional
-from ..parsers.genre import parse_genre_contents
+from ytmusicapi.mixins._protocol import MixinProtocol
+from ytmusicapi.parsers.genre import parse_genre_contents
 
 
-class GenreMixin:
+class GenreMixin(MixinProtocol):
     """Mixin class for genre browsing functionality."""
 
     def browse_genre(self, params: str) -> dict:
@@ -77,7 +75,7 @@ class GenreMixin:
 
         return None
 
-    def list_genres(self) -> list[dict]:
+    def list_genres(self) -> List[dict]:
         """
         Get a flat list of all available genres with their params.
 
