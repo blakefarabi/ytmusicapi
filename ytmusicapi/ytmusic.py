@@ -283,7 +283,6 @@ class YTMusic(
     BrowsingMixin,
     SearchMixin,
     WatchMixin,
-    LyricsMixin,
     ChartsMixin,
     ExploreMixin,
     GenreMixin,
@@ -291,6 +290,7 @@ class YTMusic(
     PlaylistsMixin,
     PodcastsMixin,
     UploadsMixin,
+    LyricsMixin
 ):
     """
     Allows automated interactions with YouTube Music by emulating the YouTube web client's requests.
