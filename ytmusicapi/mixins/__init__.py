@@ -8,6 +8,7 @@ from ytmusicapi.mixins.podcasts import PodcastsMixin
 from ytmusicapi.mixins.search import SearchMixin
 from ytmusicapi.mixins.uploads import UploadsMixin
 from ytmusicapi.mixins.watch import WatchMixin
+from ytmusicapi.mixins.lyrics import LyricsMixin
 
 __all__ = [
     "MixinProtocol",

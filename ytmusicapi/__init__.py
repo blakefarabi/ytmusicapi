@@ -5,6 +5,8 @@ from ytmusicapi.models.content.enums import LikeStatus
 from ytmusicapi.setup import setup, setup_oauth
 from ytmusicapi.ytmusic import YTMusic
 
+from ytmusicapi.providers import SyncedLyrics, LyricLine, SyncedLyricsSearcher
+
 try:
     __version__ = version("ytmusicapi")
 except PackageNotFoundError:

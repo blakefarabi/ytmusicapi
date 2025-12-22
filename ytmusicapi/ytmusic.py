@@ -36,6 +36,7 @@ from ytmusicapi.mixins.podcasts import PodcastsMixin
 from ytmusicapi.mixins.search import SearchMixin
 from ytmusicapi.mixins.uploads import UploadsMixin
 from ytmusicapi.mixins.watch import WatchMixin
+from ytmusicapi.mixins.lyrics import LyricsMixin  # <-- ADD THIS LINE
 from ytmusicapi.parsers.i18n import Parser
 
 from .auth.auth_parse import determine_auth_type, parse_auth_str
@@ -282,6 +283,7 @@ class YTMusic(
     BrowsingMixin,
     SearchMixin,
     WatchMixin,
+    LyricsMixin,
     ChartsMixin,
     ExploreMixin,
     GenreMixin,
