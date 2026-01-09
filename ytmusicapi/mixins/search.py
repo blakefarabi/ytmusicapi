@@ -1,3 +1,5 @@
+import time
+
 from ytmusicapi.continuations import get_continuations
 from ytmusicapi.exceptions import YTMusicUserError
 from ytmusicapi.mixins._protocol import MixinProtocol
@@ -6,6 +8,31 @@ from ytmusicapi.type_alias import JsonList, ParseFuncType, RequestFuncType
 
 
 class SearchMixin(MixinProtocol):
+    _search_cache: dict = {}
+    _search_cache_ttl: int = 300  # 5 minutes default
+
+    def set_search_cache_ttl(self, ttl_seconds: int) -> None:
+        """Set the TTL (time-to-live) for search cache entries in seconds."""
+        self._search_cache_ttl = ttl_seconds
+
+    def clear_search_cache(self) -> None:
+        """Clear all cached search results."""
+        self._search_cache.clear()
+
+    def _get_cache_key(self, query: str, filter: str | None, scope: str | None, limit: int, ignore_spelling: bool) -> str:
+        return f"{query}|{filter}|{scope}|{limit}|{ignore_spelling}"
+
+    def _get_cached_search(self, cache_key: str) -> JsonList | None:
+        if cache_key in self._search_cache:
+            result, timestamp = self._search_cache[cache_key]
+            if time.time() - timestamp < self._search_cache_ttl:
+                return result
+            del self._search_cache[cache_key]
+        return None
+
+    def _set_cached_search(self, cache_key: str, result: JsonList) -> None:
+        self._search_cache[cache_key] = (result, time.time())
+
     def search(
         self,
         query: str,
@@ -13,6 +40,7 @@ class SearchMixin(MixinProtocol):
         scope: str | None = None,
         limit: int = 20,
         ignore_spelling: bool = False,
+        use_cache: bool = True,
     ) -> JsonList:
         """
         Search YouTube music
@@ -32,6 +60,8 @@ class SearchMixin(MixinProtocol):
           If True, the exact search term will be searched for, and will not be corrected.
           This does not have any effect when the filter is set to ``uploads``.
           Default: False, will use YTM's default behavior of autocorrecting the search.
+        :param use_cache: Whether to use cached results if available.
+          Default: True. Cached results expire after 5 minutes.
         :return: List of results depending on filter.
           resultType specifies the type of item (important for default search).
           albums, artists and playlists additionally contain a browseId, corresponding to
@@ -140,6 +170,13 @@ class SearchMixin(MixinProtocol):
 
 
         """
+        # Check cache first
+        cache_key = self._get_cache_key(query, filter, scope, limit, ignore_spelling)
+        if use_cache:
+            cached = self._get_cached_search(cache_key)
+            if cached is not None:
+                return cached
+
         body = {"query": query}
         endpoint = "search"
         search_results: JsonList = []
@@ -259,6 +296,10 @@ class SearchMixin(MixinProtocol):
                         parse_func,
                     )
                 )
+
+        # Cache the result
+        if use_cache:
+            self._set_cached_search(cache_key, search_results)
 
         return search_results
 
